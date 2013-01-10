@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Non-Contiguous Cartogram</title>
+<style>
+
+.land {
+  fill: #fff;
+  stroke: #ccc;
+}
+
+.state {
+  fill: #ccc;
+  stroke: #666;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v0.min.js"></script>
+<script>
+function get_index_from_id(id) {
+	return id;
+}
+
+var path = d3.geo.path();
+
+var svg = d3.select("body").append("svg")
+	.attr("width", 960)
+	.attr("height", 500);
+
+d3.csv("state_Q3_2012_medicaid_gender.csv", function(values) {
+	//(values);
+	average = 0;
+	ignore_line = [];
+	for (i = 0; i < values.length; i++) {
+		if (values[i].State == "Puerto Rico" || values[i].State == "U.S. Virgin Islands" || values[i].State == "District of Columbia") {
+			console.log("")
+			ignore_line.push(i);
+		} else {
+			average += values[i].StateTotal;
+		}	
+	}
+	average /= values.length;
+	
+	d3.json("us.json", function(error, us) {
+		count = 0;
+		index = 0;
+		svg.append("path")
+			.datum(topojson.object(us, us.objects.land))
+			.attr("class", "land")
+			.attr("d", path);
+		
+		var node = svg.selectAll(".state")
+			.data(topojson.object(us, us.objects.states).geometries)
+			.enter().append("path")
+			.attr("d", path)
+			.attr("stroke", d3.rgb("#ccc"))
+			.attr("name", function(d) { return String(values[count].State); } )
+			.attr("fill", function(d) {
+				index = get_index_from_id(d.id);
+				if (index < values.length) {
+					blue = 2.55*(100-parseFloat(values[index].Male));
+					red = 2.55*(100-parseFloat(values[index].Female));
+					offset = values[index].StateTotal / average;
+					/*
+					blue *= offset;
+					red *= offset;
+					*/
+					fill_color = d3.rgb(red, 0, blue);
+					fill_color.brighter(offset);
+					index++;
+					return fill_color;
+				} else { return d3.rgb("white"); }
+			});
+			
+		node.append("title").text( function (c, j) { console.log(j); return values[j].State;});
+	});
+});
+
+</script>
+
