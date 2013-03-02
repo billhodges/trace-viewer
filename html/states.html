@@ -162,6 +162,7 @@ d3.csv("state_Q3_2012_medicaid_gender.csv", function(values) {
 					red = 2.55*(parseFloat(values[index].Female));
 					offset = values[index].StateTotal / average;
 					fill_color = d3.rgb(red, 0, blue);
+					fill_color= fill_color.brighter(0.75)
 					//fill_color = fill_color.brighter(Math.log(offset));
 					console.log("State: " + values[c].State + " Color: " + fill_color.toString())
 					return fill_color;
